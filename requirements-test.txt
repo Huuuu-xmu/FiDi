@@ -1,0 +1,3 @@
+# Lightweight unit-test environment; does not exercise the model or training.
+numpy==1.26.4
+scipy==1.13.1

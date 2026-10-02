@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Please cite this software version and the associated manuscript when using FiDi."
+type: software
+title: "FiDi: phase-specific videostroboscopic segmentation research implementation"
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/Huuuu-xmu/FiDi"
+authors:
+  - family-names: Hu
+    given-names: Yuanjia
+  - family-names: Zheng
+    given-names: Jinxing

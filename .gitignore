@@ -1,0 +1,50 @@
+# Local Python and editor state
+__pycache__/
+*.py[cod]
+.venv/
+.local/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+.idea/
+.vscode/
+.DS_Store
+.env
+.env.*
+
+# Research data and generated results
+/runs/
+/data/
+/datasets/
+/training_logs/
+/checkpoints/
+/examples/smoke_data/
+*.csv
+*.dcm
+*.mp4
+*.avi
+*.mov
+*.xlsx
+*.xls
+*.pkl
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.log
+*.zip
+*.rar
+*.7z
+
+# Generated or clinical images. Only the reviewed synthetic pairs are tracked.
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+!examples/synthetic/*.png
+
+# Experiment reports are local; configuration and patch metadata are tracked.
+*.json
+!configs/*.json
+!patches/smp-0.3.2/manifest.json

@@ -1,0 +1,10 @@
+# Install a compatible PyTorch/torchvision pair first. The recovered environment
+# used Python 3.8 and an environment named torch110; exact build metadata is lost.
+segmentation-models-pytorch==0.3.2
+numpy<2
+Pillow<11
+scipy<2
+opencv-python-headless>=4.7,<4.12
+matplotlib<4
+six
+huggingface-hub<0.26

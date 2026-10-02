@@ -1,0 +1,32 @@
+# Model implementation
+
+The builder fixes an SMP U-Net with a ResNet-18 encoder and seven output channels.
+The segmentation head returns logits. The auxiliary branch returns a sigmoid
+boundary probability map. Preprocessing and labels are described in
+[data format](data-format.md).
+
+| Component | Implementation in this version | Disabled behavior |
+| --- | --- | --- |
+| CaFe | `ShapeStream` combines three encoder scales using gated convolutions, predicts a boundary map and produces a spatial cue. The cue modulates the final decoder feature as `x * (1 + feat)`. | Skip the boundary branch, feature modulation and auxiliary boundary loss. |
+| AdaUp | CARAFE-style content-aware upsampling at three coarse decoder stages and one step in each of the three CaFe paths. Other resolution alignment uses interpolation. | Use nearest interpolation in the decoder and bilinear alignment in CaFe. |
+| InDis | ULSAM-style grouped attention on encountered 512- and 256-channel decoder inputs for the ResNet-18 path. | Bypass the grouped-attention calls. |
+
+CARAFE uses scale 2, reassembly kernel 3 and encoder kernel 3. Decoder channel
+compression is `min(input_channels, 64)`. CaFe paths use compression widths
+16, 16 and 64. The two fine decoder stages use nearest interpolation.
+These exact connections and compression choices are implementation decisions:
+the manuscript schematic did not specify all of them and the final experiment
+source is unavailable. They require confirmation before being described as the
+historical final architecture.
+
+The target boundary is Canny(`glottis_mask * 255`, 1, 3), using the union of
+labels 1 and 4. The training objective is pixel-mean cross-entropy plus lambda
+times weighted boundary BCE. For the boundary map, the positive-pixel weight is
+the fraction of negative pixels in the batch, and vice versa; weighted BCE is
+summed and divided by the number of boundary pixels. Lambda defaults to 0.1.
+
+Recovered development code used 15 epochs, inactive CARAFE calls, no final CaFe
+feature fusion, a class-1-only boundary target and last-epoch test evaluation.
+This version follows the manuscript's 20 epochs, active modules, two glottis
+labels and best-validation-mIoU checkpoint selection. It therefore needs fresh
+training; historical checkpoints cannot validate this architecture.

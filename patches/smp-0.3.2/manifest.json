@@ -1,0 +1,13 @@
+{
+  "base/model.py": {
+    "base_sha256": "798816f2137136dd04b858834f0ef23a033dd8ff435d8ae1d7dda990d273014c",
+    "pypi_sha256": "12cddee68aeed16dd1bd1597fb9ddb002ee60feb24b817c674ceb534c1ed28a3",
+    "modified_sha256": "716310b877bf11af5afe0c6dfa01e24cf1e8cfe9aa2990e0078d01ba035a3e9e",
+    "recovered_sha256": "716310b877bf11af5afe0c6dfa01e24cf1e8cfe9aa2990e0078d01ba035a3e9e"
+  },
+  "decoders/unet/decoder.py": {
+    "base_sha256": "b92a8fd75d102273f8e86bf5b02cb35a6948858c89446c058273de46ab03fd00",
+    "modified_sha256": "aaea6e04dc7166ef088318ce3ac886e076152298abe3268114088cc907ec8360",
+    "recovered_sha256": "4e990f44d5f24394837d429c9616a8e93dec0c8b43f63416808bff8bcbd9ff8b"
+  }
+}

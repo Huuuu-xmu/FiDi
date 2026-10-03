@@ -2,6 +2,9 @@
 
 ## 0.1.3 — documentation and reporting, 2026-10-03
 
+- Include Pillow in unit-test dependencies for native-crop tests.
+- Use Node 24 GitHub Actions and a fixed Ubuntu 24.04 test runner.
+
 - Present ordinary function, input and output documentation.
 - Add the original Genova dataset source and provider label mapping.
 - Use a completed-evaluation status for the Genova mask evaluator.

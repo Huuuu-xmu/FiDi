@@ -1,0 +1,13 @@
+{
+  "epochs": 20,
+  "batch_size": 16,
+  "input_size": 448,
+  "pretrained": true,
+  "boundary_weight": 0.1,
+  "boundary_classes": "1,4",
+  "disable_cafe": false,
+  "disable_adaup": false,
+  "disable_indis": false,
+  "group_folds_by_participant": true,
+  "seed": 2026
+}

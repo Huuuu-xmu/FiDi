@@ -3,7 +3,6 @@
 The two replacement files derive from the study team's modified SMP 0.3.2
 source. The decoder activates content-aware upsampling, boundary-feature
 modulation and grouped attention as documented in `docs/model-implementation.md`.
-The exact missing final architecture remains unverified.
 
 `manifest.json` records hashes of the recovered baseline, PyPI SMP 0.3.2 source,
 recovered modifications and current derivative. The recovered baseline

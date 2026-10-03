@@ -9,7 +9,9 @@ from pathlib import Path
 REQUIRED = {"image_id", "image_path", "mask_path", "participant_id", "recording_id", "split", "fold"}
 
 
-def read_manifest(path: str | Path, *, group_folds_by_participant: bool = False) -> list[dict[str, str | Path]]:
+def read_manifest(path: str | Path, *, group_folds_by_participant: bool = True) -> list[dict[str, str | Path]]:
+    if not group_folds_by_participant:
+        raise ValueError("Participant grouping cannot be disabled in this release")
     path = Path(path).resolve()
     with path.open(newline="", encoding="utf-8-sig") as stream:
         reader = csv.DictReader(stream)
@@ -67,6 +69,13 @@ def fold_partition(rows: list[dict[str, str | Path]], fold: int):
     train = [row for row in development if row["fold"] != str(fold)]
     val = [row for row in development if row["fold"] == str(fold)]
     test = [row for row in rows if row["split"] == "test"]
+    training_participants = {row["participant_id"] for row in train}
+    validation_participants = {row["participant_id"] for row in val}
+    testing_participants = {row["participant_id"] for row in test}
+    if training_participants & validation_participants:
+        raise ValueError("A participant appears in training and validation")
+    if (training_participants | validation_participants) & testing_participants:
+        raise ValueError("A participant appears in development and test")
     if not train or not val:
         raise ValueError(f"Fold {fold} has empty train or validation partition")
     return train, val, test

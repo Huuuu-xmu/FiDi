@@ -1,4 +1,4 @@
-"""Proposed image-level metrics, not verified as the manuscript implementation.
+"""Pixel-label segmentation metrics and image-level summaries.
 
 Each image contributes equally. A class with no reference and no prediction is
 omitted for that image; a one-sided empty mask scores zero for F1/IoU/Dice.
@@ -21,6 +21,7 @@ FOREGROUND = tuple(range(1, 7))
 CONVENTIONS = {
     "macro_classes": list(FOREGROUND),
     "background_in_macro": False,
+    "f1_evaluation_unit": "pixel_label_not_independent_image_phase",
     "group_f1": "per_image_micro_over_separate_class_labels",
     "within_model_aggregation": "mean_of_defined_image_scores",
     "both_empty": "undefined_excluded",
@@ -93,9 +94,9 @@ def image_metrics(pred: np.ndarray, truth: np.ndarray) -> dict[str, float | None
     else:
         dice_c = assd_c = hd95_c = None
     return {
-        "F1-G": f1_g,
-        "F1-V": f1_v,
-        "mF1": mean(f1s) if f1s else None,
+        "pixel-F1-G": f1_g,
+        "pixel-F1-V": f1_v,
+        "pixel-mF1": mean(f1s) if f1s else None,
         "mIoU": mean(ious) if ious else None,
         "Dice-C": dice_c,
         "ASSD-C": assd_c,

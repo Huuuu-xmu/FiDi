@@ -38,7 +38,7 @@ class MetricCases(unittest.TestCase):
         pred = np.zeros_like(truth)
         truth[1, 1] = 1
         pred[1, 1] = 4
-        self.assertEqual(image_metrics(pred, truth)["F1-G"], 0.0)
+        self.assertEqual(image_metrics(pred, truth)["pixel-F1-G"], 0.0)
 
     def test_asymmetric_surface_matches_table_s4_formula(self):
         truth = np.zeros((5, 5), dtype=np.uint8)

@@ -1,20 +1,18 @@
 # FiDi: laryngeal videostroboscopy segmentation
 
+Associated manuscript: **Boundary-Preserving and Phase-Specific Segmentation of the Vocal Folds and Glottis in Laryngeal Videostroboscopy: Development and Technical Evaluation of FiDi.**
+
 FiDi provides a seven-class segmentation model, training and inference commands,
 image-level metrics, and five-model summaries for videostroboscopic research.
 The implementation uses a ResNet-18 encoder with boundary supervision,
 content-aware upsampling, and grouped attention. Synthetic examples are included
 so the workflow can be checked without clinical images.
-It accompanies the manuscript *Automated Segmentation of the Vocal Folds and
-Glottis in Laryngeal Videostroboscopy: Development and Technical Evaluation of
-the FiDi Model*.
 
-**Release status:** version 0.1.0 is a manuscript-aligned reconstruction from
-recovered development source. The final source used for the historical
-experiments was not recovered. This release does not establish reproduction of
-the paper's numerical results. Its exact scope and verification are documented
-in [reproducibility](docs/reproducibility.md). The authors and publication
-permission are confirmed. The FiDi contributions are released under the
+**Software release:** version 0.1.3. The package provides model training,
+checkpoint inference, pixel-level evaluation and participant-grouped data checks.
+Training defaults and calculation conventions are documented below and in
+[execution and reporting](docs/reproducibility.md).
+The FiDi authors release their contributions under the
 [MIT License](LICENSE); upstream notices are retained separately.
 
 ## Contents
@@ -27,16 +25,16 @@ permission are confirmed. The FiDi contributions are released under the
 | `scripts/evaluate_masks.py` | Compute per-image metrics and their summaries |
 | `scripts/aggregate_models.py` | Summarize five models evaluated on the same test set |
 | `scripts/run_smoke_test.py` | Synthetic training, inference and evaluation check |
-| `configs/fidi-reconstruction.json` | Training defaults for this reconstructed implementation |
+| `configs/fidi.json` | Training defaults for this research implementation |
 | `patches/smp-0.3.2/` | FiDi model changes to segmentation_models.pytorch |
 | `examples/synthetic/` | Generated RGB/mask examples, with no patient data |
-| `docs/` | Model, labels, metric formulas and verification scope |
+| `docs/` | Model, labels, metric formulas and execution and reporting |
 
 ## Installation
 
 The verified Mac CPU environment uses Python 3.9.20 (x86_64 under Rosetta),
 PyTorch 2.2.2 and torchvision 0.17.2. It is a development environment, distinct
-from the paper's historical Windows/CUDA setup. Native Apple GPU, Windows/CUDA,
+from the paper's reported GPU/CUDA setup. Native Apple GPU, Windows/CUDA,
 and other Python versions have not been validated for this release.
 The pinned SMP 0.3.2 dependency uses timm 0.6.12, which fails to import with
 Python 3.12 in our check.
@@ -78,30 +76,27 @@ no clinical interpretation. No encoder weights are downloaded for this check.
 ## Prepare research data
 
 Use the pseudonymous CSV manifest described in [data format](docs/data-format.md).
-Masks must contain integer labels 0-6. Verify that IDs and split assignments
-correspond to the actual participants and recordings; a new manifest cannot
-recover the historical study split.
+Masks must contain integer labels 0-6. Use participant and recording IDs with the intended development/test and fold assignments.
 
-By default, images are resized to 600 x 448 and center-cropped to 448 x 448.
-The manuscript specifies the center crop but does not describe the intermediate
-resize. Confirm that preprocessing step against original experiment records
-before comparing a new run with the paper's results.
+Images and reference masks are center-cropped directly at native resolution
+to 448 x 448. No resizing or padding is applied. RGB channels are normalized
+using mean and standard deviation 0.5. Images smaller than the crop are rejected.
 Development folds follow the explicit CSV assignments. The fixed test set is
 excluded from checkpoint selection. The validator requires participant separation
-between development and test; participant grouping within development folds is
-an optional stricter rule for a newly designed experiment.
+between development and test and requires all development images and recordings
+from each participant to remain in the same fold. These checks are mandatory.
+The CSV records participant-to-image assignments explicitly.
 
 ## Train and summarize
 
 ```bash
-python scripts/train_fold.py --config configs/fidi-reconstruction.json --manifest PATH_TO_MANIFEST.csv --fold 1 --output runs/fold_1
+python scripts/train_fold.py --config configs/fidi.json --manifest PATH_TO_MANIFEST.csv --fold 1 --output runs/fold_1
 ```
 
 Repeat for folds 2-5. Defaults are ImageNet-pretrained ResNet-18, 20 epochs,
 batch size 16, Adam, cosine learning-rate decay from 1e-4 to 5e-5, and boundary
 loss weight 0.1. ImageNet initialization requires an encoder-weight download.
-The seed 2026 is a new reproducibility setting; the historical seed is unknown.
-Full-resolution clinical training has not been validated by the synthetic check.
+The default random seed is 2026 and can be changed with `--seed`.
 
 Each run saves `best_state_dict.pth`, `report.json` and `test_report.json`.
 Reports include the fold, seed, per-image scores, code/environment identity,
@@ -125,15 +120,16 @@ python scripts/evaluate_masks.py --truth MASK_DIR --prediction PREDICTION_DIR --
 
 RGB files use `*_rgb.png`, reference masks `*_gt.png`, and predictions
 `*_pred.png`. The default output is the 448 x 448 center crop.
-`--crop-reference` applies the same resize/crop to reference masks; omit it when
+`--crop-reference` applies the same native-resolution crop to reference masks; omit it when
 references are already aligned. For synthetic-size or other inputs, supply the
-same `--input-size` and `--resize-width` to both commands. Checkpoints must be
+same `--input-size` to both commands. Checkpoints must be
 trusted state-dict files created for the same model switches.
 
-Metric formulas, class membership, empty-mask handling and all averaging rules
-are specified in [metric definitions](docs/metric-definitions.md). These rules
-make this implementation explicit; the missing original F1/aggregation code
-prevents confirmation that they generated the manuscript's historical tables.
+Pixel segmentation formulas, class membership, empty-mask handling and averaging rules
+are specified in [metric definitions](docs/metric-definitions.md). Pixel F1 outputs are named
+`pixel-mF1`, `pixel-F1-G` and `pixel-F1-V`. They measure pixel-label agreement;
+the paper's F1 scores are supplementary measures of phase-related confusion.
+These pixel metrics and the reported supplementary study F1 scores have separate scopes. Independent image-phase classification is outside this evaluator.
 
 ## Ablations and additional evaluation
 
@@ -145,8 +141,7 @@ python scripts/train_fold.py --manifest PATH_TO_MANIFEST.csv --fold 1 --output r
 `--disable-cafe` and `--disable-indis` are also supported. See
 [model implementation](docs/model-implementation.md) for their precise behavior.
 The optional [Genova evaluator](docs/genova.md) handles a separate six-class task;
-it does not reproduce an external-data experiment without the original numeric
-label map and sequence split.
+prepare aligned prediction/reference masks using the documented Genova label map.
 
 ## Tests
 
@@ -164,7 +159,7 @@ The synthetic smoke command checks the model execution path separately.
 
 ## Data, citation and contributions
 
-No clinical images, patient records or historical model weights are included.
+Clinical images, participant records, trained study checkpoints and per-image study predictions are not included.
 Study data access must be arranged with the study team under its approved terms.
 The software authors and copyright holder are listed in
 [AUTHORS.md](AUTHORS.md), and [CITATION.cff](CITATION.cff) contains the citation

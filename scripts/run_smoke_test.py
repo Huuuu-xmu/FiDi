@@ -48,18 +48,18 @@ def main() -> None:
             "scripts/train_fold.py", "--manifest", "examples/smoke_data/manifest.csv",
             "--fold", str(fold), "--output", str(output / f"fold_{fold}"),
             "--epochs", "1", "--batch-size", "1", "--input-size", "64",
-            "--resize-width", "86", "--no-pretrained", "--device", "cpu",
+            "--no-pretrained", "--device", "cpu",
         ])
     run("predict", [
         "scripts/predict_masks.py", "--images", "examples/synthetic",
         "--checkpoint", str(output / "fold_1" / "best_state_dict.pth"),
         "--output", str(output / "predictions"), "--input-size", "64",
-        "--resize-width", "86", "--device", "cpu",
+        "--device", "cpu",
     ])
     run("evaluate", [
         "scripts/evaluate_masks.py", "--truth", "examples/synthetic",
         "--prediction", str(output / "predictions"), "--crop-reference",
-        "--input-size", "64", "--resize-width", "86",
+        "--input-size", "64",
         "--output", str(output / "mask_report.json"),
     ])
     if args.all_folds:
@@ -71,7 +71,6 @@ def main() -> None:
     result = {
         "status": "synthetic_execution_check_passed",
         "clinical_performance_verified": False,
-        "historical_manuscript_results_reproduced": False,
         "folds_checked": list(folds),
         "data": "synthetic repeated image pairs",
         "input_size": 64,

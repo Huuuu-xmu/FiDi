@@ -21,7 +21,6 @@ def main() -> None:
     parser.add_argument("--checkpoint", type=Path, required=True, help="Trusted state_dict checkpoint")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--input-size", type=int, default=448)
-    parser.add_argument("--resize-width", type=int, default=600)
     parser.add_argument("--device", default="cpu", choices=("cpu", "cuda", "mps"))
     parser.add_argument("--disable-cafe", action="store_true", help="Use for a checkpoint trained without CaFe")
     parser.add_argument("--disable-adaup", action="store_true", help="Use for a checkpoint trained without AdaUp")
@@ -34,8 +33,8 @@ def main() -> None:
     images = sorted(args.images.glob("*_rgb.png"))
     if not images:
         raise SystemExit("No *_rgb.png images found")
-    if args.input_size < 32 or args.input_size % 32 or args.resize_width < args.input_size:
-        parser.error("input-size must be a positive multiple of 32 and resize-width >= input-size")
+    if args.input_size < 32 or args.input_size % 32:
+        parser.error("input-size must be a positive multiple of 32")
     load_kwargs = {"map_location": args.device}
     if "weights_only" in inspect.signature(torch.load).parameters:
         load_kwargs["weights_only"] = True
@@ -56,7 +55,7 @@ def main() -> None:
     with torch.no_grad():
         for image_path in images:
             image = torch.from_numpy(load_image(
-                image_path, input_size=args.input_size, resize_width=args.resize_width
+                image_path, input_size=args.input_size
             ).copy()).unsqueeze(0).to(args.device)
             scores, _ = model(image)
             pred = scores.argmax(1).squeeze(0).cpu().numpy().astype(np.uint8)

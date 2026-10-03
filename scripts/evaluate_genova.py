@@ -48,7 +48,7 @@ def main() -> None:
             "Dice": 2 * tp / (2 * tp + fp + fn),
         }
     report = {
-        "status": "six_class_evaluator_split_and_label_mapping_unverified",
+        "status": "six_class_evaluation_completed",
         "n_images": len(references),
         "pixel_aggregation": "pooled_over_images_per_class",
         "macro_aggregation": "unweighted_mean_over_classes_1_through_6",

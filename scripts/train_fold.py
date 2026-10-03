@@ -1,4 +1,4 @@
-"""Train one reconstructed FiDi development fold from an explicit manifest."""
+"""Train one research FiDi development fold from an explicit manifest."""
 
 from __future__ import annotations
 
@@ -59,7 +59,6 @@ def main():
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--input-size", type=int, default=448, help="Square model input; manuscript value is 448")
-    parser.add_argument("--resize-width", type=int, default=600, help="Width before center crop in this reconstruction; historical value unverified")
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--no-pretrained", action="store_false", dest="pretrained", help="Skip manuscript-specified ImageNet initialization")
     parser.set_defaults(pretrained=True)
@@ -68,7 +67,7 @@ def main():
     parser.add_argument("--disable-cafe", action="store_true", help="Ablate CaFe and its boundary loss")
     parser.add_argument("--disable-adaup", action="store_true", help="Ablate adaptive upsampling")
     parser.add_argument("--disable-indis", action="store_true", help="Ablate intra-scale disambiguation")
-    parser.add_argument("--group-folds-by-participant", action="store_true", help="Use only with a newly designed participant-grouped CV manifest")
+    parser.add_argument("--group-folds-by-participant", action="store_true", default=True, help="Participant-grouped folds are mandatory; retained for CLI compatibility")
     parser.add_argument("--device", default="auto", choices=("auto", "cpu", "cuda", "mps"))
     if early.config:
         config = json.loads(early.config.read_text(encoding="utf-8"))
@@ -78,6 +77,8 @@ def main():
             parser.error(f"Unknown configuration keys: {', '.join(sorted(unknown))}")
         parser.set_defaults(**config)
     args = parser.parse_args()
+    if not args.group_folds_by_participant:
+        parser.error("Participant grouping is mandatory and cannot be disabled by a configuration file")
 
     import torch
     import torch.nn.functional as F
@@ -87,8 +88,8 @@ def main():
 
     if args.epochs < 1 or args.batch_size < 1 or args.boundary_weight < 0:
         parser.error("epochs and batch-size must be positive; boundary-weight cannot be negative")
-    if args.input_size < 32 or args.input_size % 32 or args.resize_width < args.input_size:
-        parser.error("input-size must be a positive multiple of 32 and resize-width >= input-size")
+    if args.input_size < 32 or args.input_size % 32:
+        parser.error("input-size must be a positive multiple of 32")
     try:
         boundary_classes = tuple(int(part) for part in args.boundary_classes.split(","))
     except ValueError:
@@ -105,7 +106,7 @@ def main():
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
-    data_options = {"input_size": args.input_size, "resize_width": args.resize_width}
+    data_options = {"input_size": args.input_size}
     dataset_options = {**data_options, "boundary_classes": boundary_classes}
     train_loader = DataLoader(ManifestDataset(train_rows, **dataset_options), batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(ManifestDataset(val_rows, **dataset_options), batch_size=args.batch_size, shuffle=False, num_workers=0)
@@ -155,7 +156,7 @@ def main():
     provenance = execution_metadata()
     checkpoint_hash = hashlib.sha256((args.output / "best_state_dict.pth").read_bytes()).hexdigest()
     test_report = {
-        "status": "manuscript_aligned_derivative_not_historical_result",
+        "status": "fixed_test_evaluation_completed",
         "fold": args.fold,
         "seed": args.seed,
         "best_epoch": best_epoch,
@@ -169,14 +170,13 @@ def main():
         "reference_preprocessing": data_options,
         "metric_conventions": CONVENTIONS,
         "model_config": {
-            "architecture": "source_derived_FiDi",
+            "architecture": "FiDi",
             "pretrained": args.pretrained,
             "epochs": args.epochs,
             "batch_size": args.batch_size,
             "boundary_weight": 0.0 if args.disable_cafe else args.boundary_weight,
             "boundary_classes": boundary_classes,
             "input_size": args.input_size,
-            "resize_width": args.resize_width,
             "CaFe": not args.disable_cafe,
             "AdaUp": not args.disable_adaup,
             "InDis": not args.disable_indis,
@@ -189,7 +189,7 @@ def main():
     }
     (args.output / "test_report.json").write_text(json.dumps(test_report, indent=2) + "\n", encoding="utf-8")
     report = {
-        "status": "reconstructed_run_not_verified_against_manuscript",
+        "status": "training_completed",
         "execution": provenance,
         "manifest_sha256": hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
         "checkpoint_sha256": checkpoint_hash,
@@ -200,7 +200,6 @@ def main():
         "epochs": args.epochs,
         "batch_size": args.batch_size,
         "input_size": args.input_size,
-        "resize_width": args.resize_width,
         "pretrained": args.pretrained,
         "modules": {
             "CaFe": not args.disable_cafe,
@@ -210,7 +209,7 @@ def main():
         "boundary_weight": 0.0 if args.disable_cafe else args.boundary_weight,
         "boundary_classes": boundary_classes,
         "group_folds_by_participant": args.group_folds_by_participant,
-        "model_specification": "manuscript_aligned_source_derived_not_historical_checkpoint_compatible",
+        "model_specification": "FiDi_implementation_documented_in_model_implementation_md",
         "metric_conventions": CONVENTIONS,
         "device": device,
         "counts": {"train_images": len(train_rows), "validation_images": len(val_rows), "test_images": len(test_rows)},

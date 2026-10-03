@@ -19,7 +19,7 @@ def main() -> None:
     if any(report.get("crop_reference") != reports[0].get("crop_reference") for report in reports[1:]):
         raise SystemExit("Five reports must use the same reference preprocessing")
     if any(report.get("reference_preprocessing") != reports[0].get("reference_preprocessing") for report in reports[1:]):
-        raise SystemExit("Five reports must use the same reference resize and crop")
+        raise SystemExit("Five reports must use the same reference center crop")
     if any(report.get("metric_conventions") != reports[0].get("metric_conventions") for report in reports[1:]):
         raise SystemExit("Five reports must use identical metric conventions")
     image_lists = [report.get("image_ids") for report in reports]
@@ -47,7 +47,8 @@ def main() -> None:
             "model_values": values,
         }
     body = json.dumps({
-        "status": "reconstructed_summary_not_patient_level_uncertainty",
+        "status": "five_model_summary_completed",
+        "patient_level_uncertainty_estimated": False,
         "n_models": 5,
         "n_images_per_model": len(image_lists[0]),
         "metrics": summary,

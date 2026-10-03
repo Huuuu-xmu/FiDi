@@ -1,18 +1,36 @@
-# Separate Genova task
+# Genova segmentation task
 
-The manuscript describes a separate 512 × 512-pixel endoscopic dataset with
-six foreground classes and an unweighted mean of six class-specific IoU and
-Dice scores. `scripts/evaluate_genova.py` implements that class-wise mean for
-class-index masks 0–6, pooling pixels over images before computing each class
-score. The manuscript does not specify whether the historical calculation
-pooled pixels, so this convention needs confirmation.
+The public dataset contains 536 annotated 512 × 512-pixel images in eight
+sequences from two patients. Obtain the images and annotations from the
+[original provider](https://github.com/imesluh/vocalfolds); the dataset paper is
+[Laves et al](https://doi.org/10.1007/s11548-018-01910-0).
+The manuscript treats this task as a separate supplementary technical evaluation,
+following the setup described for [RANT](https://doi.org/10.1016/j.bspc.2022.103890).
 
-The model and prediction command can accept `--input-size 512 --resize-width
-512`. A new Genova checkpoint would require training on the same sequence
-partition as RANT and a verified mapping from the six semantic classes to
-numeric mask values. The current `train_fold.py` still uses LSLE-specific
-validation metrics and a five-fold manifest, so it is not a verified Genova
-training protocol. Neither the RANT partition manifest nor the local Genova
-label map is available in the recovered files. This repository does not claim
-that the LSLE checkpoint transfers to Genova or that the reported Genova
-numbers can yet be regenerated.
+The provider's class-index masks use this mapping:
+
+| Index | Class |
+| ---: | --- |
+| 0 | void, excluded from the foreground mean |
+| 1 | vocal folds |
+| 2 | other tissue |
+| 3 | glottal space |
+| 4 | pathology |
+| 5 | surgical tool |
+| 6 | intubation |
+
+Prepare aligned `*_gt.png` and `*_pred.png` masks with this mapping, then run:
+
+```bash
+python scripts/evaluate_genova.py --truth REFERENCE_DIR --prediction PREDICTION_DIR --output runs/genova_report.json
+```
+
+The evaluator pools pixel counts across the supplied images for each foreground
+class, computes class-specific IoU and Dice, and reports their unweighted means
+across classes 1–6. It records image counts and the calculation conventions.
+
+For checkpoint inference, use a separately trained Genova checkpoint with the
+Genova label mapping and `--input-size 512`. `train_fold.py` provides the LSLE
+participant-grouped five-fold workflow; Genova training requires its own task
+configuration and sequence partition. Input images, masks, training manifests
+and checkpoints are supplied separately and are not distributed in this code package.

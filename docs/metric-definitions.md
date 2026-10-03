@@ -1,8 +1,11 @@
 # Metric definitions and aggregation
 
-These definitions describe version 0.1.0. The original F1 and five-model
-aggregation implementation was not recovered, so correspondence with historical
-manuscript tables remains unverified. New values must be identified as new runs.
+This document specifies the pixel-level metrics computed by version 0.1.3.
+The formulas and averaging terminology follow the sources listed below; class
+selection, image eligibility and undefined-value handling are explicit release
+conventions. The study uses F1 as a supplementary assessment of open/closed phase confusion.
+Software outputs `pixel-mF1`, `pixel-F1-G` and `pixel-F1-V` measure pixel-label
+agreement. Independent image-phase classification is outside this evaluator.
 
 ## Classes and overlap counts
 
@@ -13,10 +16,10 @@ scores. Phase and side labels are distinct classes.
 
 | Metric | Formula / calculation | Classes or eligible images |
 | --- | --- | --- |
-| F1-G | 2 sum(TP_k) / sum(2 TP_k + FP_k + FN_k) | k in {1,4}; per-image micro F1 over distinct phase labels |
-| F1-V | Same grouped micro formula | k in {2,3,5,6}; distinct phase and side labels |
-| mF1 | Arithmetic mean of 2 TP_k / (2 TP_k + FP_k + FN_k) | Foreground k=1..6 with at least one predicted or reference pixel in that image |
-| mIoU | Arithmetic mean of TP_k / (TP_k + FP_k + FN_k) | Same active foreground classes as mF1 |
+| pixel-F1-G | 2 sum(TP_k) / sum(2 TP_k + FP_k + FN_k) | k in {1,4}; per-image micro F1 over distinct phase labels |
+| pixel-F1-V | Same grouped micro formula | k in {2,3,5,6}; distinct phase and side labels |
+| pixel-mF1 | Arithmetic mean of 2 TP_k / (2 TP_k + FP_k + FN_k) | Foreground k=1..6 with at least one predicted or reference pixel in that image |
+| mIoU | Arithmetic mean of TP_k / (TP_k + FP_k + FN_k) | Same active foreground classes as pixel-mF1 |
 | Dice-C | 2 size(P_1 intersect T_1) / (size(P_1) + size(T_1)) | Images containing class 1 in the reference |
 | ASSD-C | Sum of all directed nearest-boundary distances divided by the total number of boundary points | Same Dice-C images, additionally requiring nonempty prediction and reference |
 | HD95-C | Maximum of the two directed 95th-percentile nearest-boundary distances | Same ASSD-C images |
@@ -39,13 +42,16 @@ HD95 = max(percentile95({d(a,B)}), percentile95({d(b,A)}))
 ```
 
 Percentiles use NumPy's default linear interpolation. HD95 uses the maximum of
-two directed percentiles, not the percentile of a pooled distance set. These
-ASSD and HD95 formulas follow the manuscript's metric table.
+two directed percentiles, not the percentile of a pooled distance set. The ASSD convention agrees with MedPy's pooled bidirectional surface-distance
+average. The HD95 convention agrees with MONAI's undirected percentile
+Hausdorff calculation. Both are documented in Table S4. MedPy's HD95 uses a
+different pooled-percentile convention, so package names alone do not specify
+identical metrics.
 
 ## Empty masks and undefined values
 
 - A class/group empty in both prediction and reference is undefined and omitted
-  for that image. If all foreground classes are empty, mF1 and mIoU are null.
+  for that image. If all foreground classes are empty, pixel-mF1 and mIoU are null.
 - A class/group empty on one side only receives overlap score 0.
 - A Dice-C-eligible image with no predicted class-1 pixels receives Dice-C 0;
   its surface distances are null.
@@ -72,9 +78,21 @@ plus `n_defined` and `n_undefined` for each image-level mean.
 Variation among five models is not a patient-level confidence interval. Patient
 or recording clustering is not accounted for by these image-level summaries.
 
-## Historical rules still requiring confirmation
+## Relation between pixel-level F1 and IoU
 
-The original class grouping, background inclusion, empty-mask policy,
-image/batch/pixel pooling, phase eligibility, surface definitions and five-model
-aggregation need confirmation or a newly documented analysis. This release
-makes these choices explicit without asserting their historical equivalence.
+For identical prediction/reference sets, F1 = 2 IoU / (1 + IoU).
+For identical class/image weights, concavity implies
+mean(F1) <= 2 mean(IoU) / (1 + mean(IoU)). This comparison is valid only when
+evaluation units, eligible cases and weights agree. An image-level phase F1
+would be a different metric and would require explicit phase labels and a
+prediction rule; this release does not compute it.
+
+## Sources
+
+- Taha AA, Hanbury A. Metrics for evaluating 3D medical image segmentation: analysis, selection, and tool. BMC Med Imaging. 2015;15:29. https://doi.org/10.1186/s12880-015-0068-x
+- Maier-Hein L, Reinke A, Godau P, et al. Metrics reloaded: recommendations for image analysis validation. Nat Methods. 2024;21:195-212. https://doi.org/10.1038/s41592-023-02151-z
+- Scikit-learn F1 score documentation (macro/micro weighting and undefined values): https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+- MedPy ASSD documentation: https://loli.github.io/medpy/generated/medpy.metric.binary.assd.html
+- MONAI Hausdorff source (undirected maximum of directed percentiles): https://monai-dev.readthedocs.io/en/stable/_modules/monai/metrics/hausdorff_distance.html
+
+These sources describe metric formulas and aggregation terminology.

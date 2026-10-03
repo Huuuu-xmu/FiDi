@@ -14,10 +14,7 @@ boundary probability map. Preprocessing and labels are described in
 CARAFE uses scale 2, reassembly kernel 3 and encoder kernel 3. Decoder channel
 compression is `min(input_channels, 64)`. CaFe paths use compression widths
 16, 16 and 64. The two fine decoder stages use nearest interpolation.
-These exact connections and compression choices are implementation decisions:
-the manuscript schematic did not specify all of them and the final experiment
-source is unavailable. They require confirmation before being described as the
-historical final architecture.
+These settings specify the model constructed by this release.
 
 The target boundary is Canny(`glottis_mask * 255`, 1, 3), using the union of
 labels 1 and 4. The training objective is pixel-mean cross-entropy plus lambda
@@ -25,8 +22,4 @@ times weighted boundary BCE. For the boundary map, the positive-pixel weight is
 the fraction of negative pixels in the batch, and vice versa; weighted BCE is
 summed and divided by the number of boundary pixels. Lambda defaults to 0.1.
 
-Recovered development code used 15 epochs, inactive CARAFE calls, no final CaFe
-feature fusion, a class-1-only boundary target and last-epoch test evaluation.
-This version follows the manuscript's 20 epochs, active modules, two glottis
-labels and best-validation-mIoU checkpoint selection. It therefore needs fresh
-training; historical checkpoints cannot validate this architecture.
+The training command uses 20 epochs by default and selects the checkpoint with the highest validation mIoU. Checkpoints should be loaded with the same model switches and class mapping used for training.

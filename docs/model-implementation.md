@@ -23,3 +23,18 @@ the fraction of negative pixels in the batch, and vice versa; weighted BCE is
 summed and divided by the number of boundary pixels. Lambda defaults to 0.1.
 
 The training command uses 20 epochs by default and selects the checkpoint with the highest validation mIoU. Checkpoints should be loaded with the same model switches and class mapping used for training.
+
+## Method sources
+
+AdaUp uses content-aware feature reassembly as described by Wang et al.,
+“CARAFE: Content-Aware ReAssembly of FEatures,” ICCV 2019, pp. 3007–3016,
+[doi:10.1109/ICCV.2019.00310](https://doi.org/10.1109/ICCV.2019.00310).
+
+InDis adapts the grouped subspace-attention operations described by Saini,
+Jha, Das, Mittal and Mohan, “ULSAM: Ultra-Lightweight Subspace Attention
+Module for Compact Convolutional Neural Networks,” WACV 2020, pp. 1627–1636,
+[doi:10.1109/WACV45572.2020.9093341](https://doi.org/10.1109/WACV45572.2020.9093341).
+The attention implementation is adapted from the authors’
+[ULSAM implementation](https://github.com/Nandan91/ULSAM/blob/master/ulsam.py).
+Feature groups are learned channel subspaces; they are not fixed anatomical
+class assignments.

@@ -294,14 +294,14 @@ class UnetDecoder(nn.Module):
 
         self.shape_stream = ShapeStream()
 
-        # self.gate_attention_32 = ULSAM(nin=64,nout=64,h=224,w=224,num_splits=4)
-        # self.gate_attention_64 = ULSAM(nin=64, nout=64, h=112, w=112, num_splits=4)
-        # self.gate_attention_128 = ULSAM(nin=128, nout=128, h=56, w=56, num_splits=4)
-        self.gate_attention_256 = ULSAM(nin=256, nout=256, h=28, w=28, num_splits=8)
-        self.gate_attention_512 = ULSAM(nin=512, nout=512, h=14, w=14, num_splits=8)
+        # self.gate_attention_32 = GroupedSpatialAttention(channels=64, groups=4)
+        # self.gate_attention_64 = GroupedSpatialAttention(channels=64, groups=4)
+        # self.gate_attention_128 = GroupedSpatialAttention(channels=128, groups=4)
+        self.gate_attention_256 = GroupedSpatialAttention(channels=256, groups=8)
+        self.gate_attention_512 = GroupedSpatialAttention(channels=512, groups=8)
 
-        self.gate_attention_112 = ULSAM(nin=112, nout=112, h=28, w=28, num_splits=8)
-        self.gate_attention_960 = ULSAM(nin=960, nout=960, h=14, w=14, num_splits=8)
+        self.gate_attention_112 = GroupedSpatialAttention(channels=112, groups=8)
+        self.gate_attention_960 = GroupedSpatialAttention(channels=960, groups=8)
 
         self.use_cafe = True
         self.use_adaup = True
@@ -358,130 +358,57 @@ class UnetDecoder(nn.Module):
         return x, gate
 
 
+class GroupedSpatialAttention(nn.Module):
+    """Group-wise spatial gating following ULSAM equations 2-4.
 
-
-
-class SubSpace(nn.Module):
-    """
-    Subspace class.
-
-    ...
-
-    Attributes
-    ----------
-    nin : int
-        number of input feature volume.
-
-    Methods
-    -------
-    __init__(nin)
-        initialize method.
-    forward(x)
-        forward pass.
-
+    One grouped projection produces one attention map per channel group.
+    Softmax is applied over spatial locations; the residual preserves shape.
+    Method: Saini et al., WACV 2020, doi:10.1109/WACV45572.2020.9093341.
     """
 
-    def __init__(self, nin: int) -> None:
-        super(SubSpace, self).__init__()
-        self.conv_dws = nn.Conv2d(
-            nin, nin, kernel_size=1, stride=1, padding=0, groups=nin
-        )
-        self.bn_dws = nn.BatchNorm2d(nin, momentum=0.9)
-        self.relu_dws = nn.ReLU(inplace=False)
+    def __init__(self, channels: int, groups: int = 8):
+        super().__init__()
+        if channels < 1 or groups < 1 or channels % groups:
+            raise ValueError("channels must be positive and divisible by groups")
+        self.channels = channels
+        self.groups = groups
+        self.channel_filter = nn.Conv2d(channels, channels, 1, groups=channels)
+        self.channel_norm = nn.BatchNorm2d(channels, momentum=0.9)
+        self.group_projection = nn.Conv2d(channels, groups, 1, groups=groups)
+        self.group_norm = nn.BatchNorm2d(groups, momentum=0.9)
 
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+    def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict,
+                              missing_keys, unexpected_keys, error_msgs):
+        # Concatenate the per-group tensors used by earlier FiDi checkpoints.
+        # This mapping preserves values and does not include the old module code.
+        if prefix + "subspaces.0.conv_dws.weight" in state_dict:
+            names = {"channel_filter": "conv_dws", "channel_norm": "bn_dws",
+                     "group_projection": "conv_point", "group_norm": "bn_point"}
+            for destination, legacy in names.items():
+                for key in getattr(self, destination).state_dict():
+                    keys = [f"{prefix}subspaces.{group}.{legacy}.{key}"
+                            for group in range(self.groups)]
+                    if not all(key in state_dict for key in keys):
+                        error_msgs.append(f"Incomplete legacy attention tensors for {prefix}")
+                        continue
+                    values = [state_dict.pop(key) for key in keys]
+                    if values[0].ndim == 0:
+                        if not all(torch.equal(values[0], value) for value in values):
+                            error_msgs.append(f"Inconsistent legacy counters for {prefix}")
+                        value = values[0]
+                    else:
+                        value = torch.cat(values, dim=0)
+                    state_dict[prefix + destination + "." + key] = value
+        super()._load_from_state_dict(state_dict, prefix, local_metadata, strict,
+                                      missing_keys, unexpected_keys, error_msgs)
 
-        self.conv_point = nn.Conv2d(
-            nin, 1, kernel_size=1, stride=1, padding=0, groups=1
-        )
-        self.bn_point = nn.BatchNorm2d(1, momentum=0.9)
-        self.relu_point = nn.ReLU(inplace=False)
-
-        self.softmax = nn.Softmax(dim=2)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        out = self.conv_dws(x)
-        out = self.bn_dws(out)
-        out = self.relu_dws(out)
-
-        out = self.maxpool(out)
-
-        out = self.conv_point(out)
-        out = self.bn_point(out)
-        out = self.relu_point(out)
-
-        m, n, p, q = out.shape
-        out = self.softmax(out.view(m, n, -1))
-        out = out.view(m, n, p, q)
-
-        out = out.expand(x.shape[0], x.shape[1], x.shape[2], x.shape[3])
-
-        out = torch.mul(out, x)
-
-        out = out + x
-
-        return out
-
-
-class ULSAM(nn.Module):
-    """
-    Grouped Attention Block having multiple (num_splits) Subspaces.
-
-    ...
-
-    Attributes
-    ----------
-    nin : int
-        number of input feature volume.
-
-    nout : int
-        number of output feature maps
-
-    h : int
-        height of a input feature map
-
-    w : int
-        width of a input feature map
-
-    num_splits : int
-        number of subspaces
-
-    Methods
-    -------
-    __init__(nin)
-        initialize method.
-    forward(x)
-        forward pass.
-
-    """
-
-    def __init__(self, nin: int, nout: int, h: int, w: int, num_splits: int) -> None:
-        super(ULSAM, self).__init__()
-
-        assert nin % num_splits == 0
-
-        self.nin = nin
-        self.nout = nout
-        self.h = h
-        self.w = w
-        self.num_splits = num_splits
-
-        self.subspaces = nn.ModuleList(
-            [SubSpace(int(self.nin / self.num_splits)) for i in range(self.num_splits)]
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        group_size = int(self.nin / self.num_splits)
-
-        # split at batch dimension
-        sub_feat = torch.chunk(x, self.num_splits, dim=1)
-
-        out = []
-        for idx, l in enumerate(self.subspaces):
-            out.append(self.subspaces[idx](sub_feat[idx]))
-
-        out = torch.cat(out, dim=1)
-
-        # out = 1. + torch.tanh(out)
-
-        return out
+    def forward(self, features):
+        if features.ndim != 4 or features.shape[1] != self.channels:
+            raise ValueError("Expected an NCHW tensor with the configured channels")
+        filtered = F.relu(self.channel_norm(self.channel_filter(features)))
+        neighborhood = F.max_pool2d(filtered, kernel_size=3, stride=1, padding=1)
+        scores = F.relu(self.group_norm(self.group_projection(neighborhood)))
+        weights = scores.flatten(2).softmax(dim=-1).reshape_as(scores)
+        batch, _, height, width = features.shape
+        grouped = features.reshape(batch, self.groups, self.channels // self.groups, height, width)
+        return (grouped * (1 + weights.unsqueeze(2))).reshape_as(features)

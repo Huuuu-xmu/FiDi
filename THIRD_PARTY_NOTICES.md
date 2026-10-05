@@ -27,10 +27,12 @@ The AdaUp content-aware reassembly operation follows CARAFE by Jiaqi Wang,
 Kai Chen, Rui Xu, Ziwei Liu, Chen Change Loy and Dahua Lin (ICCV 2019;
 doi:10.1109/ICCV.2019.00310).
 
-The InDis grouped-attention implementation includes adaptations of the
-SubSpace and ULSAM operations in the authors’ reference code:
-https://github.com/Nandan91/ULSAM/blob/master/ulsam.py. Credit belongs to
+The InDis method follows the grouped subspace-attention formulation by
 Rajat Saini, Nandan Kumar Jha, Bedanta Das, Sparsh Mittal and C. Krishna Mohan
-(WACV 2020; doi:10.1109/WACV45572.2020.9093341). The repository’s MIT notice
-for study-team contributions does not replace notices or permissions
-applicable to third-party source material.
+(WACV 2020; doi:10.1109/WACV45572.2020.9093341), equations 2-4.
+Version 0.1.4 implements these operations in GroupedSpatialAttention with
+PyTorch depthwise and grouped pointwise convolutions. The previous SubSpace
+and ULSAM source classes are not included in this release. The new implementation
+is part of the FiDi contributions covered by this repository's MIT License.
+Method attribution does not grant or imply a license to the authors' separate
+reference code.

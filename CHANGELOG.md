@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.4 — grouped attention implementation, 2026-10-05
+
+- Replace the reference-source SubSpace/ULSAM classes with a new vectorized
+  implementation of the published grouped attention operations.
+- Retain the method citation and all metric, preprocessing and training defaults.
+- Group attention parameter tensors and convert earlier FiDi checkpoint tensors
+  automatically when loading.
+- Update software version metadata and third-party method notices.
+
 ## 0.1.3 — documentation and reporting, 2026-10-03
 
 - Include Pillow in unit-test dependencies for native-crop tests.

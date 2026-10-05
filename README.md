@@ -8,7 +8,7 @@ The implementation uses a ResNet-18 encoder with boundary supervision,
 content-aware upsampling, and grouped attention. Synthetic examples are included
 so the workflow can be checked without clinical images.
 
-**Software release:** version 0.1.3. The package provides model training,
+**Software release:** version 0.1.4. The package provides model training,
 checkpoint inference, pixel-level evaluation and participant-grouped data checks.
 Training defaults and calculation conventions are documented below and in
 [execution and reporting](docs/reproducibility.md).

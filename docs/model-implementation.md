@@ -34,7 +34,10 @@ InDis adapts the grouped subspace-attention operations described by Saini,
 Jha, Das, Mittal and Mohan, “ULSAM: Ultra-Lightweight Subspace Attention
 Module for Compact Convolutional Neural Networks,” WACV 2020, pp. 1627–1636,
 [doi:10.1109/WACV45572.2020.9093341](https://doi.org/10.1109/WACV45572.2020.9093341).
-The attention implementation is adapted from the authors’
-[ULSAM implementation](https://github.com/Nandan91/ULSAM/blob/master/ulsam.py).
+The release implements these published operations in `GroupedSpatialAttention`
+using depthwise and grouped pointwise convolutions. It contains no copied
+`SubSpace` or `ULSAM` source classes from the authors’ reference repository.
+Version 0.1.4 uses grouped parameter tensors. The loader converts earlier
+FiDi per-group attention tensors to this representation when loading a checkpoint.
 Feature groups are learned channel subspaces; they are not fixed anatomical
 class assignments.

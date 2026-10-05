@@ -2,7 +2,7 @@
 
 ## Package contents
 
-Version 0.1.3 provides the FiDi model, data loading, training, checkpoint
+Version 0.1.4 provides the FiDi model, data loading, training, checkpoint
 inference, pixel-level metric evaluation and five-model aggregation. It also
 includes a separate six-class Genova mask evaluator and generated examples.
 
@@ -50,3 +50,12 @@ generated outputs with the configuration used to obtain them.
 - The six-class Genova evaluator returned IoU and Dice of 1.0 for identical synthetic masks containing all six foreground labels.
 - Execution source SHA-256: `80a096bd3e2a0d9b1951ae2365cef31c49a9971f000c60af6f87934da7ceb01c`.
 - These checks use generated examples for software execution.
+
+## Version 0.1.4 checks on 2026-10-05
+
+- Eleven unit tests passed.
+- All five synthetic training folds, checkpoint inference, mask evaluation and aggregation passed.
+- Six attention comparisons covered evaluation and training modes, multiple channel widths, and rectangular feature maps. Forward outputs, input gradients and parameter gradients agreed with the previous implementation within floating-point precision after matching parameters.
+- Previous per-group attention checkpoint keys loaded successfully through automatic parameter conversion.
+- Execution source SHA-256: `333ec409e0a6e38e693c870e2080abf3b66285c330343261b9403bd47e9b71bc`.
+- These checks verify software execution and the attention replacement. They do not change the study's reported experimental scores.

@@ -1,6 +1,6 @@
 # Metric definitions and aggregation
 
-This document specifies the pixel-level metrics computed by version 0.1.3.
+This document specifies the pixel-level metrics computed by version 0.1.4.
 The formulas and averaging terminology follow the sources listed below; class
 selection, image eligibility and undefined-value handling are explicit release
 conventions. The study uses F1 as a supplementary assessment of open/closed phase confusion.

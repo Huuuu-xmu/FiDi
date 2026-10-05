@@ -13,7 +13,7 @@ The training command requires a CSV manifest with one row per image and these co
 | `fold` | 1–5 for development images; blank for test images. |
 
 All images and recordings from one participant must stay within one
-development/test split and, for development, within one fold. Version 0.1.3
+development/test split and, for development, within one fold. Version 0.1.4
 enforces these requirements by default and does not allow them to be disabled.
 The loader rejects missing IDs, repeated images, mismatched recording
 ownership, nonexistent files, and leakage into the fixed test set. For fold

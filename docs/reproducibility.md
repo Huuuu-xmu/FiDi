@@ -5,13 +5,13 @@
 Version 0.1.4 contains the FiDi model, preprocessing, participant-grouped data
 checks, training, checkpoint inference, LSLE pixel-level evaluation and
 five-model aggregation. A separate evaluator handles Genova class-index masks.
-The package was assembled from available development source and the method
-specifications; source details are recorded in [model implementation](model-implementation.md).
+Model architecture and loss functions are described in
+[model implementation](model-implementation.md).
 
-Clinical images and annotations, participant records, trained study checkpoints
-and per-image study predictions are not included. The manuscript and its
-supplementary tables report the study results. Running this package without
-the study data and experiment records cannot regenerate those results.
+Prepare the image manifest, images and class-index masks before training.
+For inference, provide a checkpoint with the required class mapping and model
+settings. The repository contains code and documentation; clinical data and
+trained study checkpoints are not included.
 
 ## Model and training settings
 
@@ -36,8 +36,8 @@ The package default seed is 2026; record any change made with `--seed`.
 
 The manuscript reports PyTorch 1.9.1, CUDA 11.1 and an NVIDIA GeForce RTX 3090.
 Local package checks used Python 3.9.20, PyTorch 2.2.2 and torchvision 0.17.2
-on a Mac CPU. [tested-environment.txt](tested-environment.txt) records that local
-environment, not the original study environment.
+on a Mac CPU. The local dependency list is recorded in
+[tested-environment.txt](tested-environment.txt).
 
 ## Experiment records
 
@@ -54,6 +54,5 @@ in the manuscript. [Metric definitions](metric-definitions.md) specifies the
 formulas, eligible images and handling of empty masks.
 
 Image means weight each eligible image equally. Five-model summaries report
-the mean and sample SD of five scores from the same fixed test set. They do not
-estimate patient-level confidence intervals. Genova uses its own six-class
-mapping and pools pixel counts across the supplied images within each class.
+the mean and sample SD of five scores from the same fixed test set. Genova uses
+its own six-class mapping and pools pixel counts across images within each class.

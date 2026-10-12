@@ -1,4 +1,4 @@
-"""Summarize five model reports while keeping the models as distinct runs."""
+"""Calculate the mean and sample SD of five model reports."""
 
 from __future__ import annotations
 

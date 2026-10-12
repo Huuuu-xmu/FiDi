@@ -1,4 +1,4 @@
-"""Evaluate the separate six-foreground-class Genova segmentation task."""
+"""Calculate IoU and Dice from six-class Genova masks."""
 
 from __future__ import annotations
 

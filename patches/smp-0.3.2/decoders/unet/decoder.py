@@ -29,9 +29,9 @@ class ConvBNReLU(nn.Module):
 
 class CARAFE(nn.Module):
     def __init__(self, c, c_mid=64, scale=2, k_up=3, k_enc=3):
-        """ The unofficial implementation of the CARAFE module.
+        """ Content-aware feature reassembly (CARAFE).
 
-        The details are in "https://arxiv.org/abs/1905.02188".
+        Wang et al., ICCV 2019: https://arxiv.org/abs/1905.02188.
 
         Args:
             c: The channel number of the input and the output.
@@ -297,8 +297,7 @@ class UnetDecoder(nn.Module):
 
             x = decoder_block(x, skip, use_adaup=self.use_adaup)
 
-        # The original final fusion code was not retained. This residual
-        # modulation is the implementation used in this package; see docs.
+        # Modulate decoder features with the CaFe boundary cue.
         if edge_feature is not None:
             x = x * (1.0 + edge_feature)
 

@@ -36,7 +36,7 @@ By default, RGB images and masks are center-cropped directly at native
 resolution to 448 × 448. No resizing or padding is applied, and smaller source
 images are rejected. RGB channels are normalized using mean and standard
 deviation 0.5. The crop preserves the integer mask labels exactly. `--input-size`
-selects another crop size for synthetic checks or a separately specified task.
+selects another crop size when required by the task.
 The configuration `configs/fidi.json` uses 448.
-The training boundary target follows the manuscript wording: a Canny edge map
+The training boundary target is a Canny edge map
 of the combined glottis mask (classes 1 and 4). 

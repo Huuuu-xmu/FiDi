@@ -29,8 +29,7 @@ The evaluator pools pixel counts across the supplied images for each foreground
 class, computes class-specific IoU and Dice, and reports their unweighted means
 across classes 1–6. It records image counts and the calculation conventions.
 
-For checkpoint inference, use a separately trained Genova checkpoint with the
-Genova label mapping and `--input-size 512`. `train_fold.py` provides the LSLE
-participant-grouped five-fold workflow; Genova training requires its own task
-configuration and sequence partition. Input images, masks, training manifests
-and checkpoints are supplied separately and are not distributed in this code package.
+The Genova task uses a different class mapping from LSLE. The seven-output LSLE
+checkpoint cannot be used as a Genova checkpoint solely by changing input size.
+This package provides Genova mask evaluation; it does not include the Genova
+training pipeline, task-specific inference command or trained checkpoint.

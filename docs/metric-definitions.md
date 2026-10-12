@@ -1,9 +1,8 @@
 # Metric definitions and aggregation
 
 This document specifies the pixel-level metrics computed by version 0.1.4.
-The formulas and averaging terminology follow the sources listed below; class
-selection, image eligibility and undefined-value handling are explicit release
-conventions. The study uses F1 as a supplementary assessment of open/closed phase confusion.
+Class selection, image eligibility and undefined-value handling are specified
+below. The study uses F1 as a supplementary assessment of open/closed phase confusion.
 Software outputs `pixel-mF1`, `pixel-F1-G` and `pixel-F1-V` measure pixel-label
 agreement. Independent image-phase classification is outside this evaluator.
 
@@ -27,8 +26,7 @@ scores. Phase and side labels are distinct classes.
 A confusion between two labels inside an F1 group counts as an error, including
 1 versus 4. These scores do not simply merge a group into one binary mask.
 Dice-C eligibility uses class-1 presence in the reference, not independently
-recorded phase metadata. Closed-phase images with an empty class-1 mask are
-therefore excluded; this must be reconsidered if phase metadata are available.
+recorded phase metadata. Closed-phase images with an empty class-1 mask are therefore excluded.
 
 ## Surface distances
 
@@ -95,4 +93,3 @@ prediction rule; this release does not compute it.
 - MedPy ASSD documentation: https://loli.github.io/medpy/generated/medpy.metric.binary.assd.html
 - MONAI Hausdorff source (undirected maximum of directed percentiles): https://monai-dev.readthedocs.io/en/stable/_modules/monai/metrics/hausdorff_distance.html
 
-These sources describe metric formulas and aggregation terminology.

@@ -1,61 +1,59 @@
 # Execution and reporting
 
-## Package contents
+## Package scope
 
-Version 0.1.4 provides the FiDi model, data loading, training, checkpoint
-inference, pixel-level metric evaluation and five-model aggregation. It also
-includes a separate six-class Genova mask evaluator and generated examples.
+Version 0.1.4 contains the FiDi model, preprocessing, participant-grouped data
+checks, training, checkpoint inference, LSLE pixel-level evaluation and
+five-model aggregation. A separate evaluator handles Genova class-index masks.
+The package was assembled from available development source and the method
+specifications; source details are recorded in [model implementation](model-implementation.md).
 
-The clinical images, participant-level source records, trained study checkpoints
-and per-image study predictions are supplied separately. Published experimental
-tables are reported in the article and supplementary results.
+Clinical images and annotations, participant records, trained study checkpoints
+and per-image study predictions are not included. The manuscript and its
+supplementary tables report the study results. Running this package without
+the study data and experiment records cannot regenerate those results.
 
-## Configuration and records
+## Model and training settings
 
-- Record the image/mask paths, participant IDs, recording IDs, development/test split and development fold in the data manifest.
-- Keep each participant within one partition and one development fold.
-- Record model switches, random seed, training configuration and package versions for each run.
-- The training defaults are ResNet-18 with ImageNet initialization, 20 epochs, batch size 16, Adam, cosine learning-rate decay and boundary-loss weight 0.1.
-- Inputs are directly center-cropped to 448 × 448 at native resolution.
-- Reports include the configuration, metric conventions, per-image values, checkpoint identity and reference-image identity.
-- Preserve the selected checkpoints and evaluation reports with the experiment records.
+| Setting | Value |
+| --- | --- |
+| Encoder | ImageNet-pretrained ResNet-18 |
+| Modules | CaFe, AdaUp and InDis |
+| LSLE labels | Six phase-specific foreground classes plus background |
+| Input | Native-resolution 448 × 448 center crop |
+| Augmentation | None |
+| Loss | Multiclass cross-entropy plus weighted auxiliary boundary BCE |
+| Boundary target | Canny edges of the union of glottis labels 1 and 4 |
+| Boundary-loss weight | 0.1 |
+| Optimizer | Adam |
+| Training | 20 epochs, batch size 16 |
+| Learning rate | Cosine annealing from 1e-4 to 5e-5 |
+| Checkpoint selection | Highest validation mIoU within each development fold |
+
+Use participant-separated development/test partitions and five participant-level
+development folds. Evaluate each selected checkpoint on the same fixed test set.
+The package default seed is 2026; record any change made with `--seed`.
+
+The manuscript reports PyTorch 1.9.1, CUDA 11.1 and an NVIDIA GeForce RTX 3090.
+Local package checks used Python 3.9.20, PyTorch 2.2.2 and torchvision 0.17.2
+on a Mac CPU. [tested-environment.txt](tested-environment.txt) records that local
+environment, not the original study environment.
+
+## Experiment records
+
+Keep the data manifest, configuration, random seed, selected checkpoint and
+reports for each fold. Reports record software versions, source hashes,
+checkpoint hashes, image and reference-mask hashes, and metric conventions.
+These records identify the inputs and implementation used for a run.
 
 ## Metric scope
 
-The software evaluates pixel-label segmentation. Its F1 outputs carry the
-`pixel-` prefix; supplementary phase-related study F1 is reported separately
-in the manuscript. Per-image values are averaged with equal weights over
-defined cases, and five-model summaries contain a mean and sample SD.
-These summaries describe variation across model fits, not a patient-level
-confidence interval. Detailed definitions are in `metric-definitions.md`.
+The LSLE evaluator computes pixel-label segmentation metrics. Outputs with the
+`pixel-` F1 prefix are separate from the supplementary phase-related F1 values
+in the manuscript. [Metric definitions](metric-definitions.md) specifies the
+formulas, eligible images and handling of empty masks.
 
-## Execution checks
-
-The version 0.1.2 workflow passed eleven unit tests and all five synthetic
-training folds, checkpoint inference, mask evaluation and aggregation on
-2026-10-03. The tested source SHA-256 was
-`85236f07db1745e08e635392f9df4f2e1daf595b77d95de4ebfe042069d7b71c`.
-The local CPU environment used Python 3.9.20, PyTorch 2.2.2 and torchvision
-0.17.2. The dependency list is in `tested-environment.txt`.
-
-Synthetic examples are installation and execution checks; their scores have
-no clinical performance interpretation. For a study analysis, supply the
-clinical manifest and task data, train the selected models, and preserve the
-generated outputs with the configuration used to obtain them.
-
-## Version 0.1.3 checks on 2026-10-03
-
-- Eleven unit tests passed.
-- All five synthetic training folds, inference, mask evaluation and aggregation passed.
-- The six-class Genova evaluator returned IoU and Dice of 1.0 for identical synthetic masks containing all six foreground labels.
-- Execution source SHA-256: `80a096bd3e2a0d9b1951ae2365cef31c49a9971f000c60af6f87934da7ceb01c`.
-- These checks use generated examples for software execution.
-
-## Version 0.1.4 checks on 2026-10-05
-
-- Eleven unit tests passed.
-- All five synthetic training folds, checkpoint inference, mask evaluation and aggregation passed.
-- Six attention comparisons covered evaluation and training modes, multiple channel widths, and rectangular feature maps. Forward outputs, input gradients and parameter gradients agreed with the previous implementation within floating-point precision after matching parameters.
-- Previous per-group attention checkpoint keys loaded successfully through automatic parameter conversion.
-- Execution source SHA-256: `333ec409e0a6e38e693c870e2080abf3b66285c330343261b9403bd47e9b71bc`.
-- These checks verify software execution and the attention replacement. They do not change the study's reported experimental scores.
+Image means weight each eligible image equally. Five-model summaries report
+the mean and sample SD of five scores from the same fixed test set. They do not
+estimate patient-level confidence intervals. Genova uses its own six-class
+mapping and pools pixel counts across the supplied images within each class.

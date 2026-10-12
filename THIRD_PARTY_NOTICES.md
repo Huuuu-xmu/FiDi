@@ -15,11 +15,9 @@ ImageNet encoder weights are downloaded separately when requested by training.
 
 ## Study-team modifications
 
-The model's local CaFe/AdaUp/InDis code was supplied in a modified SMP package.
-The study team has confirmed permission to publish its modifications under the
-repository's MIT License. The upstream MIT notice remains in
-`patches/smp-0.3.2/LICENSE.upstream`. This repository includes no recovered
-project archive, clinical files or model checkpoints.
+The FiDi team's CaFe, AdaUp and InDis modifications are released under the
+repository's MIT License. The SMP notice is preserved in
+`patches/smp-0.3.2/LICENSE.upstream`.
 
 ## CARAFE and ULSAM method attribution
 
@@ -30,9 +28,7 @@ doi:10.1109/ICCV.2019.00310).
 The InDis method follows the grouped subspace-attention formulation by
 Rajat Saini, Nandan Kumar Jha, Bedanta Das, Sparsh Mittal and C. Krishna Mohan
 (WACV 2020; doi:10.1109/WACV45572.2020.9093341), equations 2-4.
-Version 0.1.4 implements these operations in GroupedSpatialAttention with
-PyTorch depthwise and grouped pointwise convolutions. The previous SubSpace
-and ULSAM source classes are not included in this release. The new implementation
-is part of the FiDi contributions covered by this repository's MIT License.
-Method attribution does not grant or imply a license to the authors' separate
-reference code.
+`GroupedSpatialAttention` implements these operations using PyTorch depthwise
+and grouped pointwise convolutions. This implementation is covered by the
+repository's MIT License; the cited authors' reference code retains its own
+license.

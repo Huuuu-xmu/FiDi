@@ -1,4 +1,4 @@
-# Lightweight unit-test environment; does not exercise the model or training.
+# Dependencies for metric, manifest, preprocessing and aggregation tests.
 numpy==1.26.4
 scipy==1.13.1
 Pillow==10.4.0

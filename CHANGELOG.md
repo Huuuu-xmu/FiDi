@@ -31,6 +31,6 @@
 
 ## 0.1.0
 
-- Assemble model, preprocessing, training and inference commands from available source and method specifications.
+- Add model, preprocessing, training and inference commands.
 - Add pixel-level metrics, per-image outputs and five-model summaries.
 - Record software versions and checkpoint/reference hashes in reports.

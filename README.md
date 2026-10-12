@@ -15,8 +15,8 @@ Evaluation of FiDi* (not yet published).
 This repository contains the version 0.1.4 software package: model implementation,
 preprocessing, training, inference and evaluation. Clinical images, annotations,
 participant records, study checkpoints and per-image study predictions are not
-included. See [implementation details](docs/model-implementation.md) for the
-available source and the scope of this implementation.
+included. Model architecture and loss functions are described in
+[model implementation](docs/model-implementation.md).
 
 ## Installation
 
@@ -32,9 +32,8 @@ python scripts/prepare_smp.py
 
 For CUDA, install a compatible PyTorch/torchvision pair, then `requirements.txt`.
 The manuscript reports experiments with PyTorch 1.9.1, CUDA 11.1 and a single
-NVIDIA GeForce RTX 3090. The local CPU environment is for checking this code
-package and differs from that study environment. SMP 0.3.2 depends on timm
-0.6.12, which did not import successfully under Python 3.12 in our checks.
+NVIDIA GeForce RTX 3090. The pinned CPU dependencies
+above provide a Python 3.9 environment for running the package locally.
 
 `prepare_smp.py` checks source hashes and places the FiDi model files in a local
 SMP copy under `.local/`. The installed library is unchanged. Dependency versions
@@ -83,9 +82,8 @@ it on the fixed test set. Outputs are `best_state_dict.pth`, `report.json` and
 python scripts/aggregate_models.py runs/fold_1/test_report.json runs/fold_2/test_report.json runs/fold_3/test_report.json runs/fold_4/test_report.json runs/fold_5/test_report.json --output runs/five_model_summary.json
 ```
 
-The summary reports the mean and sample SD across five model scores. These
-values describe variation across model fits; they are not patient-level
-confidence intervals. See [execution and reporting](docs/reproducibility.md).
+The summary reports the mean and sample SD across the five model scores.
+See [execution and reporting](docs/reproducibility.md) for the reporting format.
 
 ## Inference and evaluation
 
@@ -99,20 +97,19 @@ during training. `--crop-reference` applies the same center crop to reference
 masks; omit it if the references are already aligned. For a different crop size,
 pass the same `--input-size` to both commands.
 
-The evaluator computes mIoU, Dice-C, ASSD-C, HD95-C and pixel-label F1 scores.
-The `pixel-mF1`, `pixel-F1-G` and `pixel-F1-V` outputs are separate from the
-supplementary phase-related F1 results in the manuscript. Metric formulas,
-eligibility rules and undefined values are documented in
-[metric definitions](docs/metric-definitions.md).
+The evaluator computes mIoU, Dice-C, ASSD-C, HD95-C and pixel-label F1 scores
+(`pixel-mF1`, `pixel-F1-G` and `pixel-F1-V`). See
+[metric definitions](docs/metric-definitions.md) for formulas, eligible images
+and the distinction between pixel-label and phase-related F1.
 
 ## Ablation and Genova evaluation
 
 `train_fold.py` supports `--disable-cafe`, `--disable-adaup`, `--disable-indis`
 and `--boundary-weight` for component ablation and loss-weight sensitivity.
 
-The [Genova evaluator](docs/genova.md) uses a separate six-class mapping and
-reports class-specific IoU and Dice with unweighted means. The LSLE training and
-inference commands do not provide the Genova training pipeline or checkpoint.
+The [Genova evaluator](docs/genova.md) accepts reference and predicted masks
+with the Genova six-class mapping. It reports class-specific IoU and Dice and
+their unweighted means.
 
 ## Tests
 

@@ -1,8 +1,7 @@
-"""Create a private copy of SMP 0.3.2 with the recovered FiDi changes.
+"""Create a local SMP 0.3.2 copy with the FiDi model files.
 
-This script never modifies the installed package. The replacements derive from
-recovered development source and implement the architecture described in the
-manuscript. Hash checks guard against patching an unrelated upstream version.
+Source and replacement hashes are checked before copying. The installed
+package is unchanged.
 """
 
 from __future__ import annotations
@@ -54,7 +53,7 @@ def main() -> None:
         if digest(upstream) not in accepted:
             raise SystemExit(f"Upstream file is not a recognized SMP 0.3.2 source: {name}")
         if digest(PATCH / name) != hashes["modified_sha256"]:
-            raise SystemExit(f"Recovered replacement hash mismatch: {name}")
+            raise SystemExit(f"FiDi replacement hash mismatch: {name}")
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     if OUTPUT.exists():
@@ -62,7 +61,7 @@ def main() -> None:
     shutil.copytree(source, OUTPUT, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     for name in manifest:
         shutil.copyfile(PATCH / name, OUTPUT / name)
-    print(f"Prepared manuscript-aligned model package at {OUTPUT}")
+    print(f"Prepared FiDi model package at {OUTPUT}")
 
 
 if __name__ == "__main__":

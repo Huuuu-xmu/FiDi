@@ -1,4 +1,4 @@
-"""Train one research FiDi development fold from an explicit manifest."""
+"""Train one participant-grouped FiDi development fold."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from fidi.provenance import execution_metadata
 
 
 def boundary_loss(edge, boundary):
-    """Weighted auxiliary boundary BCE following the recovered loss code."""
+    """Compute class-balanced auxiliary boundary binary cross-entropy."""
     import torch
     import torch.nn.functional as F
 
@@ -58,9 +58,9 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--input-size", type=int, default=448, help="Square model input; manuscript value is 448")
+    parser.add_argument("--input-size", type=int, default=448, help="Square crop size in pixels; default: 448")
     parser.add_argument("--seed", type=int, default=2026)
-    parser.add_argument("--no-pretrained", action="store_false", dest="pretrained", help="Skip manuscript-specified ImageNet initialization")
+    parser.add_argument("--no-pretrained", action="store_false", dest="pretrained", help="Disable ImageNet encoder initialization")
     parser.set_defaults(pretrained=True)
     parser.add_argument("--boundary-weight", type=float, default=0.1, help="Lambda for auxiliary boundary loss")
     parser.add_argument("--boundary-classes", default="1,4", help="Comma-separated class IDs used for the glottis edge target")
@@ -99,7 +99,7 @@ def main():
     rows = read_manifest(args.manifest, group_folds_by_participant=args.group_folds_by_participant)
     train_rows, val_rows, test_rows = fold_partition(rows, args.fold)
     if not test_rows:
-        parser.error("The manuscript workflow requires a nonempty fixed test set")
+        parser.error("A nonempty fixed test set is required")
     device = ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
     random.seed(args.seed)
     np.random.seed(args.seed)

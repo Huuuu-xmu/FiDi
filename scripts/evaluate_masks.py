@@ -1,4 +1,4 @@
-"""Evaluate paired class-index PNG masks with proposed image-level metrics."""
+"""Evaluate paired class-index PNG masks with pixel-level segmentation metrics."""
 
 from __future__ import annotations
 

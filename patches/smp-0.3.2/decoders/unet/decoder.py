@@ -4,21 +4,6 @@ import torch.nn.functional as F
 
 from segmentation_models_pytorch.base import modules as md
 from torchvision.models.resnet import BasicBlock
-import matplotlib.pyplot as plt
-
-def  draw_tensor(tensor, sample, dim, cmap=None):
-    if len(tensor.size()) == 3:
-        pic = tensor[sample, :, :].cpu().detach().numpy()
-    else:
-        pic = tensor[sample,dim,:,:].cpu().detach().numpy()
-
-    if cmap != None:
-        plt.imshow(pic, cmap=cmap)
-    else:
-        plt.imshow(pic)
-    plt.show()
-
-
 class ConvBNReLU(nn.Module):
     '''Module for the Conv-BN-ReLU tuple.'''
 
@@ -77,20 +62,16 @@ class CARAFE(nn.Module):
         h_, w_ = h * self.scale, w * self.scale
 
         W = self.comp(X)  # b * m * h * w
-        W = self.enc(W)  # b * 100 * h * w
-        W = self.pix_shf(W)  # b * 25 * h_ * w_
-        W = F.softmax(W, dim=1)  # b * 25 * h_ * w_
+        W = self.enc(W)  # b * (scale*k_up)^2 * h * w
+        W = self.pix_shf(W)  # b * k_up^2 * h_ * w_
+        W = F.softmax(W, dim=1)  # b * k_up^2 * h_ * w_
 
         X = self.upsmp(X)  # b * c * h_ * w_
-        X = self.unfold(X)  # b * 25c * h_ * w_
-        X = X.view(b, c, -1, h_, w_)  # b * 25 * c * h_ * w_
+        X = self.unfold(X)  # b * (k_up^2*c) * h_ * w_
+        X = X.view(b, c, -1, h_, w_)  # b * c * k_up^2 * h_ * w_
 
         X = torch.einsum('bkhw,bckhw->bchw', [W, X])  # b * c * h_ * w_
         return X
-
-
-
-
 
 
 class DecoderBlock(nn.Module):
@@ -121,9 +102,7 @@ class DecoderBlock(nn.Module):
         )
         self.attention2 = md.Attention(attention_type, in_channels=out_channels)
 
-        # The manuscript schematic shows three AdaUp paths. Restrict the
-        # content-aware module to the three coarse decoder stages; finer stages
-        # use nearest-neighbor interpolation to keep batch-16 memory bounded.
+        # Use content-aware upsampling in the three coarse decoder stages.
         self.adaptive_upsampler = (
             CARAFE(in_channels, c_mid=min(in_channels, 64))
             if use_adaptive_module else None
@@ -165,13 +144,10 @@ class CenterBlock(nn.Sequential):
 class ShapeStream(nn.Module):
     def __init__(self):
         super().__init__()
-        # for resnet18
-        # mobilenetv3: 3, 16, 24, 40, 112, 960
-        # resnet18: 3, 64, 64, 128, 256, 512
+        # ResNet-18 feature channels: 64, 64, 128, 256, 512.
         self.res2_conv = nn.Conv2d(64, 1, 1)
         self.res2_conv2 = nn.Conv2d(64, 1, 1)
         self.res3_conv = nn.Conv2d(128, 1, 1)
-        # self.res4_conv = nn.Conv2d(256, 1, 1)
         self.res1 = BasicBlock(64, 64, 1)
         self.res2 = BasicBlock(64, 64, 1)
         self.res3 = BasicBlock(128, 128, 1)
@@ -187,29 +163,9 @@ class ShapeStream(nn.Module):
         self.adaup_res2 = CARAFE(1, c_mid=16)
         self.adaup_res3 = CARAFE(64, c_mid=64)
 
-        # for mobilenetv3::::
-        # mobilenetv3: 3, 16, 24, 40, 112, 960
-        # self.res2_conv = nn.Conv2d(16, 1, 1)
-        # self.res2_conv2 = nn.Conv2d(24, 1, 1)
-        # self.res3_conv = nn.Conv2d(40, 1, 1)
-        # # self.res4_conv = nn.Conv2d(256, 1, 1)
-        # self.res1 = BasicBlock(64, 64, 1)
-        # self.res2 = BasicBlock(64, 64, 1)
-        # self.res3 = BasicBlock(128, 128, 1)
-        # self.res1_pre = nn.Conv2d(40, 24, 1)
-        # self.res2_pre = nn.Conv2d(24, 16, 1)
-        # self.res3_pre = nn.Conv2d(40, 24, 1)
-        # self.gate3 = GatedConv(24, 24)
-        # self.gate2 = GatedConv(16, 16)
-        #
-        # self.gate = nn.Conv2d(16, 1, 1, bias=False)
-        # self.fuse = nn.Conv2d(2, 1, 1, bias=False)
-
-
 
     def forward(self, x, res2, res3, use_adaup=True):
-        # The shallow feature is at half input resolution. This retains the
-        # LSLE 448x448 output while allowing the 512x512 Genova input size.
+        # Restore the input resolution from the shallow feature map.
         size = (x.size(-2) * 2, x.size(-1) * 2)
 
         res3 = self.res3_pre(res3)
@@ -293,10 +249,6 @@ class UnetDecoder(nn.Module):
         self.blocks = nn.ModuleList(blocks)
 
         self.shape_stream = ShapeStream()
-
-        # self.gate_attention_32 = GroupedSpatialAttention(channels=64, groups=4)
-        # self.gate_attention_64 = GroupedSpatialAttention(channels=64, groups=4)
-        # self.gate_attention_128 = GroupedSpatialAttention(channels=128, groups=4)
         self.gate_attention_256 = GroupedSpatialAttention(channels=256, groups=8)
         self.gate_attention_512 = GroupedSpatialAttention(channels=512, groups=8)
 
@@ -315,26 +267,24 @@ class UnetDecoder(nn.Module):
 
     def forward(self, *features):
 
-        features = features[1:]  # remove first skip with same spatial resolution   mobilenetv3: 3,16,24,40,112,960   resnet18: 3,64,64,128,256,512
+        features = features[1:]  # Drop the input-resolution skip.
         features = features[::-1]  # reverse channels to start from head of encoder
 
         head = features[0]
         skips = features[1:]
 
-        # for TMI method
         gate = None
         edge_feature = None
         if self.use_cafe:
             gate, edge_feature = self.shape_stream(
                 features[4], features[3], features[2], use_adaup=self.use_adaup
             )
-        # draw_tensor(gate, 0, 0)
 
         x = self.center(head)
         for i, decoder_block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
 
-            # for latent space split
+            # Apply InDis to supported channel widths.
             if self.use_indis:
                 if x.size(1) == 512:
                     x = self.gate_attention_512(x)
@@ -344,14 +294,11 @@ class UnetDecoder(nn.Module):
                     x = self.gate_attention_112(x)
                 if x.size(1) == 960:
                     x = self.gate_attention_960(x)
-            # if x.size(1) == 128:
-            #     x = self.gate_attention_128(x)
 
             x = decoder_block(x, skip, use_adaup=self.use_adaup)
 
-        # Fuse the high-resolution CaFe cue into the decoder output, as shown
-        # in the manuscript's technical route. This residual modulation is a
-        # source-derived implementation choice; the final fusion code is lost.
+        # The original final fusion code was not retained. This residual
+        # modulation is the implementation used in this package; see docs.
         if edge_feature is not None:
             x = x * (1.0 + edge_feature)
 
@@ -380,7 +327,6 @@ class GroupedSpatialAttention(nn.Module):
     def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict,
                               missing_keys, unexpected_keys, error_msgs):
         # Concatenate the per-group tensors used by earlier FiDi checkpoints.
-        # This mapping preserves values and does not include the old module code.
         if prefix + "subspaces.0.conv_dws.weight" in state_dict:
             names = {"channel_filter": "conv_dws", "channel_norm": "bn_dws",
                      "group_projection": "conv_point", "group_norm": "bn_point"}

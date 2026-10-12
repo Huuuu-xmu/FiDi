@@ -1,4 +1,4 @@
-"""Small hand-checkable cases for the proposed metrics."""
+"""Check pixel-label metrics against manually calculated values."""
 
 import unittest
 

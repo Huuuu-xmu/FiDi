@@ -1,4 +1,4 @@
-"""Participant leakage protections at the manifest and partition boundaries."""
+"""Check participant separation in manifests and fold partitions."""
 import csv
 import tempfile
 import unittest

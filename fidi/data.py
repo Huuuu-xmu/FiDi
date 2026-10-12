@@ -1,4 +1,4 @@
-"""Native-resolution center cropping for the manuscript imaging protocol."""
+"""Image loading, native-resolution center cropping and boundary targets."""
 
 from __future__ import annotations
 

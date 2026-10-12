@@ -1,4 +1,4 @@
-"""Record the environment and code identity without collecting clinical data."""
+"""Record software versions and source hashes for an experiment."""
 
 from __future__ import annotations
 

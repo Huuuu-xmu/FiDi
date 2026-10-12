@@ -1,4 +1,4 @@
-"""Build a manuscript-aligned FiDi model from the source-derived SMP patch."""
+"""Build FiDi with a ResNet-18 encoder and the local SMP model files."""
 
 from __future__ import annotations
 

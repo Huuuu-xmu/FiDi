@@ -1,3 +1,3 @@
-"""Research FiDi workflow. See README before interpreting any outputs."""
+"""FiDi: fine and disambiguous segmentation."""
 
 __version__ = "0.1.4"

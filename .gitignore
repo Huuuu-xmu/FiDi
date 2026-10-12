@@ -18,7 +18,6 @@ __pycache__/
 /datasets/
 /training_logs/
 /checkpoints/
-/examples/smoke_data/
 *.csv
 *.dcm
 *.mp4
@@ -36,13 +35,12 @@ __pycache__/
 *.rar
 *.7z
 
-# Generated or clinical images. Only the reviewed synthetic pairs are tracked.
+# Images are supplied separately.
 *.png
 *.jpg
 *.jpeg
 *.tif
 *.tiff
-!examples/synthetic/*.png
 
 # Experiment reports are local; configuration and patch metadata are tracked.
 *.json

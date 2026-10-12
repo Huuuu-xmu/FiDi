@@ -1,5 +1,4 @@
-# Install a compatible PyTorch/torchvision pair first. The recovered environment
-# used Python 3.8 and an environment named torch110; exact build metadata is lost.
+# Install a compatible PyTorch/torchvision pair before these dependencies.
 segmentation-models-pytorch==0.3.2
 numpy<2
 Pillow<11

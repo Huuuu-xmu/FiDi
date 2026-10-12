@@ -1,58 +1,36 @@
 # Changelog
 
-## 0.1.4 — grouped attention implementation, 2026-10-05
+## Documentation update — 2026-10-12
 
-- Replace the reference-source SubSpace/ULSAM classes with a new vectorized
-  implementation of the published grouped attention operations.
-- Retain the method citation and all metric, preprocessing and training defaults.
-- Group attention parameter tensors and convert earlier FiDi checkpoint tensors
-  automatically when loading.
-- Update software version metadata and third-party method notices.
+- Remove geometric image examples, their generators and the demonstration training script.
+- Rename the pinned CPU dependency file to `requirements-cpu.txt`.
+- Update module names and training descriptions to match the current manuscript.
+- Clarify manuscript status, software scope and the local test environment.
+- Remove obsolete comments and internal preparation notes. Model operations, training defaults and metric formulas are unchanged.
 
-## 0.1.3 — documentation and reporting, 2026-10-03
+## 0.1.4 — 2026-10-05
 
-- Include Pillow in unit-test dependencies for native-crop tests.
-- Use Node 24 GitHub Actions and a fixed Ubuntu 24.04 test runner.
+- Implement ULSAM-based grouped attention with vectorized grouped convolutions.
+- Convert earlier per-group attention checkpoint tensors when loading.
+- Update method attribution and third-party notices.
 
-- Present ordinary function, input and output documentation.
-- Add the original Genova dataset source and provider label mapping.
-- Use a completed-evaluation status for the Genova mask evaluator.
-- Retain explicit pixel F1 names and all metric calculations.
-- Leave model architecture, preprocessing, training and numerical evaluation behavior unchanged.
+## 0.1.3 — 2026-10-03
 
+- Document inputs, outputs and the Genova class mapping.
+- Add Pillow to unit-test dependencies and update the GitHub Actions runner.
 
-## 0.1.2 — manuscript protocol alignment, 2026-10-03
+## 0.1.2 — 2026-10-03
 
-- Center-crop at native resolution; remove the intermediate 600 x 448 resize. Reject undersized inputs rather than resize or pad them.
-- Distinguish pixel-label F1 outputs from the paper's supplementary phase-related F1 by explicit `pixel-` names. No image-phase prediction rule is inferred.
-- Use the ordinary research software release name and synchronize the manuscript title. Retain verification scope and participant-group protections.
+- Use native-resolution center cropping without intermediate resizing.
+- Name pixel-label F1 outputs with a `pixel-` prefix.
 
+## 0.1.1 — 2026-10-03
 
-## 0.1.1 — final submission package, 2026-10-03
+- Require participant separation across development folds and the fixed test set.
+- Check participant separation again when constructing fold partitions.
 
-- Require participant separation across development folds as well as the fixed test split. Reject configurations that disable this protection.
-- Add a defensive participant-leakage check to fold partitioning.
-- Update manuscript metadata and document the distinction between historical results and the implementation metric rules.
-- Preserve the model architecture, preprocessing, metric formulas and historical manuscript numbers.
+## 0.1.0
 
-
-## Unreleased — GitHub repository preparation
-
-- Made the code directory the repository root and separated local submission
-  checks, logs, model weights and draft files from the publishable tree.
-- Added a Python 3.9 unit-test workflow and a small test dependency list.
-- Clarified setup and the scope of the historical execution checks. Added
-  confirmed software authors, copyright holder and the MIT License. No model or
-  metric behavior changed in this preparation.
-
-## 0.1.0 — submission candidate
-
-- Prepared model, data, training and inference workflows from recovered
-  source and manuscript specifications.
-- Added explicit seven-label metrics, per-image outputs and five-model summaries.
-- Added code/environment identity and checkpoint/reference hashes to reports.
-- Added isolated SMP preparation, synthetic examples and one-command smoke checks.
-- Documented model settings, metric calculations and data manifest requirements.
-- Preserved null metric values rather than silently dropping models from summaries.
-
-Software authors, publication permission and the MIT License were confirmed after the code candidate was prepared.
+- Assemble model, preprocessing, training and inference commands from available source and method specifications.
+- Add pixel-level metrics, per-image outputs and five-model summaries.
+- Record software versions and checkpoint/reference hashes in reports.

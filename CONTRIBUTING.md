@@ -1,14 +1,11 @@
 # Contributing
 
-Describe the scientific reason for model or metric changes and update the
-corresponding documentation. Keep historical evidence and newly generated
-results identified separately. Record the configuration, seed, source identity
-and environment for each run.
+Run `python -m unittest discover -s tests -v` before submitting a change.
+Update the documentation when changing inputs, outputs or model settings.
 
-Run the unit tests and the synthetic smoke command after changes to the model
-or workflow. Keep clinical images, participant information, private manifests,
-checkpoints and credentials outside Git. Report failures with synthetic examples
-and sanitized logs where possible.
+Keep study data, participant records, checkpoints and local experiment outputs
+outside the repository. Bug reports should include the command, software
+versions and relevant logs with private information removed.
 
-Changes to metric definitions require a version increment and new result tables;
-they must not silently change the meaning of previously reported scores.
+Document changes to metric formulas and averaging rules so that results from
+different versions can be distinguished.

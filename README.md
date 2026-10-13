@@ -128,3 +128,5 @@ The manuscript citation will be added when publication details are available.
 Software authors are listed in [AUTHORS.md](AUTHORS.md). FiDi contributions use
 the [MIT License](LICENSE); upstream notices and method sources are listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Last Update: 10/13/2026
